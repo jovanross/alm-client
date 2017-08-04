@@ -1,16 +1,20 @@
 {
-    "name": "stepansib/alm-client",
+    "name": "jovanross/alm-client",
     "description": "HP ALM/QC REST Client for PHP",
     "license": "MIT",
     "authors": [
         {
             "name": "Stepan Yudin",
             "email": "stepan.sib@gmail.com"
+        },
+        {
+            "name": "Jovan Ross",
+            "email": "jovanross@gmail.com"
         }
     ],
     "autoload": {
         "psr-4": {
-            "StepanSib\\AlmClient\\": "src\\"
+            "AlmClient\\": "almclient\\"
         }
     },
     "require": {
