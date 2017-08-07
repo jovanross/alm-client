@@ -11,7 +11,7 @@ class AlmAuthenticator
 
     protected $password;
 
-    private function GetUser()
+    public function GetUser()
     {
         return $this->user;
     }
@@ -21,7 +21,7 @@ class AlmAuthenticator
         $this->user = $user;
     }
 
-    private function GetPassword()
+    public function GetPassword()
     {
         return $this->password;
     }
@@ -49,22 +49,36 @@ class AlmAuthenticator
 
         $this->SetPassword($password);
 
+        $this->Login();
+
     }
 
     public function Login()
     {
         try {
-            $headers = array("GET /HTTP/1.1", "Authorization: Basic " . base64_encode($this->GetUser() . ":" . $this->GetPassword()));
 
-            $isValid = \AlmClient\AlmCurl::GetInstance()->SetHeaders($headers)->Execute(\AlmClient\AlmRoutes::GetInstance()->GetLoginUrl())->ValidResponse();
+            $isValid = \AlmClient\AlmCurl::GetInstance()
+                ->AcceptXMLHeader()
+                ->SetPost(\AlmClient\ALMXMLMessage::GetInstance()->ConstructMessage('alm-authentication', array('user'=>$this->GetUser(),'password'=>$this->GetPassword())))
+                ->Execute(\AlmClient\AlmRoutes::GetInstance()->GetLoginUrl())
+                ->ValidResponse();
 
             if (!$isValid) {
 
                 \AlmClient\AlmCurlCookieJar::GetInstance()->RemoveCurlCookieJar();
 
+                throw new \Exception('Authentication error : Invalid response returned');
+
             } else {
 
-                throw new \Exception('Authentication error : Invalid response returned');
+                //verify 'isAuthenticated'
+                $isValid = \AlmClient\AlmCurl::GetInstance()->AcceptXMLHeader()->Execute(\AlmClient\AlmRoutes::GetInstance()->GetAuthenticationCheckUrl())->ValidResponse();
+
+                if (!$isValid) {
+
+                    throw new \Exception('Authentication error : Invalid response returned');
+
+                }
 
             }
 

@@ -19,6 +19,8 @@ Class AlmCurl
 
     protected $info;
 
+    protected $headers = array();
+
     public static function GetInstance()
     {
         if (is_null(self::$Instance)) {
@@ -45,8 +47,20 @@ Class AlmCurl
             curl_setopt($this->curl, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($this->curl, CURLOPT_CONNECTTIMEOUT, 10); //connection timeout
             curl_setopt($this->curl, CURLOPT_TIMEOUT, 30); //overall timeout
+            curl_setopt($this->curl, CURLOPT_FOLLOWLOCATION, true);
 
             $this->Reset();
+        }
+
+        return $this;
+    }
+
+    public function AddHeader($header = null)
+    {
+        $this->Init();
+
+        if (!empty($header)) {
+            array_push($this->headers, $header);
         }
 
         return $this;
@@ -57,7 +71,7 @@ Class AlmCurl
         $this->Init();
 
         if (count($headers) > 0) {
-            curl_setopt($this->curl, CURLOPT_HTTPHEADER, $headers);
+            $this->headers = $headers;
         }
 
         return $this;
@@ -71,6 +85,11 @@ Class AlmCurl
         curl_setopt($this->curl, CURLOPT_POSTFIELDS, $body);
 
         return $this;
+    }
+
+    public function SetBasicAuth($auth)
+    {
+        curl_setopt($this->curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
     }
 
     public function SetPut($body = null)
@@ -93,6 +112,22 @@ Class AlmCurl
         return $this;
     }
 
+    public function BasicAuthHeader($user, $password)
+    {
+
+        array_push($this->headers,"Authorization: Basic " . base64_encode($user . ":" . $password));
+
+        return $this;
+    }
+
+    public function AcceptXMLHeader()
+    {
+
+        array_push($this->headers,'Accept: application/xml');
+
+        return $this;
+    }
+
     public function Execute($url)
     {
 
@@ -100,6 +135,12 @@ Class AlmCurl
 
         curl_setopt($this->curl, CURLOPT_URL, $url);
         curl_setopt($this->curl, CURLOPT_COOKIEFILE, \AlmClient\AlmCurlCookieJar::GetInstance()->GetCookieJar());
+
+        if(count($this->headers)){
+
+            curl_setopt($this->curl, CURLOPT_HTTPHEADER, $this->headers);
+
+        }
 
         $result = curl_exec($this->curl);
 
@@ -196,6 +237,7 @@ Class AlmCurl
 
             curl_close($this->curl);
             $this->curl = null;
+            $this->headers = array();
 
         }
 

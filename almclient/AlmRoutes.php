@@ -19,6 +19,8 @@ class AlmRoutes
 
     protected $project;
 
+    protected $appended = /*'?login-form-required=y'*/null;
+
     public static function GetInstance($host = null)
     {
         if (is_null(self::$Instance)) {
@@ -66,22 +68,34 @@ class AlmRoutes
 
     public function GetLoginUrl()
     {
-        return $this->GetHost() . '/qcbin/authentication-point/authenticate';
+        return $this->GetHost() . '/qcbin/authentication-point/authenticate' . $this->appended;
     }
 
     public function GetLogoutUrl()
     {
-        return $this->GetHost() . '/qcbin/authentication-point/logout';
+        return $this->GetHost() . '/qcbin/authentication-point/logout' . $this->appended;
     }
 
     public function GetAuthenticationCheckUrl()
     {
-        return $this->GetHost() . '/qcbin/rest/is-authenticated';
+        return $this->GetHost() . '/qcbin/rest/is-authenticated' . $this->appended;
+    }
+
+    public function GetDomainsUrl($domain = null)
+    {
+        $url = $this->GetHost() . '/qcbin/rest/domains/' . $domain . $this->appended;
+        return $url;
+    }
+
+    public function GetProjectUrl($project = null)
+    {
+        $url = $this->GetHost() . '/qcbin/rest/domains/' . $this->domain . '/projects/' . $project . $this->appended;
+        return $url;
     }
 
     public function GetEntityUrl($entityType, $entityId = null)
     {
-        $url = $this->GetHost() . '/qcbin/rest/domains/' . $this->domain . '/projects/' . $this->project . '/' . $entityType;
+        $url = $this->GetHost() . '/qcbin/rest/domains/' . $this->domain . '/projects/' . $this->project . '/' . $entityType . $this->appended;
         if (null !== $entityId) {
             $url .= '/' . $entityId;
         }
@@ -90,7 +104,7 @@ class AlmRoutes
 
     public function GetEntityFieldsUrl($entityType, $onlyRequiredFields = true)
     {
-        $url = $this->GetHost() . '/qcbin/rest/domains/' . $this->domain . '/projects/' . $this->project . '/customization/entities/' . $entityType . '/fields';
+        $url = $this->GetHost() . '/qcbin/rest/domains/' . $this->domain . '/projects/' . $this->project . '/customization/entities/' . $entityType . '/fields' . $this->appended;
         if ($onlyRequiredFields) {
             $url .= '?required=true';
         }
@@ -99,7 +113,7 @@ class AlmRoutes
 
     public function GetListsUrl($listId = null)
     {
-        $url = $this->GetHost() . '/qcbin/rest/domains/' . $this->domain . '/projects/' . $this->project . '/customization/lists';
+        $url = $this->GetHost() . '/qcbin/rest/domains/' . $this->domain . '/projects/' . $this->project . '/customization/lists' . $this->appended;
         if (null !== $listId) {
             $url .= '?id=' . $listId;
         }
@@ -108,19 +122,19 @@ class AlmRoutes
 
     public function GetEntityCheckoutUrl($entityType, $entityId)
     {
-        $url = $this->GetHost() . '/qcbin/rest/domains/' . $this->domain . '/projects/' . $this->project . '/' . $entityType . '/' . $entityId . '/versions/check-out';
+        $url = $this->GetHost() . '/qcbin/rest/domains/' . $this->domain . '/projects/' . $this->project . '/' . $entityType . '/' . $entityId . '/versions/check-out' . $this->appended;
         return $url;
     }
 
     public function GetEntityCheckinUrl($entityType, $entityId)
     {
-        $url = $this->GetHost() . '/qcbin/rest/domains/' . $this->domain . '/projects/' . $this->project . '/' . $entityType . '/' . $entityId . '/versions/check-in';
+        $url = $this->GetHost() . '/qcbin/rest/domains/' . $this->domain . '/projects/' . $this->project . '/' . $entityType . '/' . $entityId . '/versions/check-in' . $this->appended;
         return $url;
     }
 
     public function GetEntityLockUrl($entityType, $entityId)
     {
-        $url = $this->GetHost() . '/qcbin/rest/domains/' . $this->domain . '/projects/' . $this->project . '/' . $entityType . '/' . $entityId . '/lock';
+        $url = $this->GetHost() . '/qcbin/rest/domains/' . $this->domain . '/projects/' . $this->project . '/' . $entityType . '/' . $entityId . '/lock' . $this->appended;
         return $url;
     }
 

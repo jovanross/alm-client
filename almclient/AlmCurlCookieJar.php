@@ -13,18 +13,49 @@ class AlmCurlCookieJar
 
     private static $Instance;
 
-    const MEMORY_LIMIT = 5242880;
+    private $cookieJar = null;
 
-    private $cookieJar;
+    private $pointer = null;
+
+    private function GetPointer()
+    {
+        return $this->pointer;
+    }
+
+    private function SetPointer($pointer)
+    {
+        $this->pointer = $pointer;
+    }
+
+    private function SetCookieJar($cookieJar)
+    {
+
+        try {
+
+            if(!empty($cookieJar)){
+
+                $this->SetPointer(fopen($cookieJar, 'r+'));
+
+            }
+
+            $this->cookieJar = $cookieJar;
+
+        } catch(\Exception $e){
+
+            throw new \Exception($e->getMessage());
+
+        }
+
+    }
 
     public function GetCookieJar()
     {
 
         try {
 
-            if (!$this->CurlCookieJarExists()) {
+            if (empty($this->GetPointer())) {
 
-                $this->SetCookieJar(fopen('php://temp/maxmemory:'.self::MEMORY_LIMIT, 'r+'));
+                $this->SetCookieJar(tempnam('/tmp','AlmClient'));
 
             }
 
@@ -38,32 +69,17 @@ class AlmCurlCookieJar
 
     }
 
-    public function __construct(){}
-
-    private function SetCookieJar($cookieJar)
-    {
-        $this->cookieJar = $cookieJar;
-    }
-
-    public static function GetInstance()
-    {
-        if (is_null(self::$Instance)) {
-            self::$Instance = new self();
-
-            self::$Instance->GetCookieJar();
-        }
-
-        return self::$Instance;
-    }
-
     public function RemoveCurlCookieJar()
     {
 
         try {
 
-            if ($this->CurlCookieJarExists()) {
+            if($this->GetPointer()){
 
-                fclose($this->GetCookieJar());
+                @fclose($this->GetPointer());
+
+                $this->SetPointer(null);
+                $this->SetCookieJar(null);
 
             }
 
@@ -76,29 +92,17 @@ class AlmCurlCookieJar
         }
     }
 
-    public function CurlCookieJarExists()
+    public function __construct(){}
+
+    public static function GetInstance()
     {
+        if (is_null(self::$Instance)) {
+            self::$Instance = new self();
 
-        try {
-
-            if ($this->GetCookieJar()) {
-
-                if (file_exists($this->GetCookieJar())) {
-
-                    return true;
-
-                }
-
-            }
-
-            return false;
-
-        } catch(\Exception $e){
-
-            throw new \Exception($e->getMessage());
-
+            self::$Instance->GetCookieJar();
         }
 
+        return self::$Instance;
     }
 
 }

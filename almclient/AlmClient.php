@@ -30,4 +30,31 @@ Class AlmClient
 
     }
 
+    public function GetDomains()
+    {
+        try {
+
+            $isValid = \AlmClient\AlmCurl::GetInstance()
+                ->AcceptXMLHeader()
+                ->Execute(\AlmClient\AlmRoutes::GetInstance()->GetDomainsUrl())
+                ->ValidResponse();
+
+            if (!$isValid) {
+
+                \AlmClient\AlmCurlCookieJar::GetInstance()->RemoveCurlCookieJar();
+
+                throw new \Exception('Authentication error : Invalid response returned');
+
+            }
+
+            return \AlmClient\AlmCurl::GetInstance()->GetResult();
+
+        } catch (\Exception $e) {
+
+            \AlmClient\AlmCurlCookieJar::GetInstance()->RemoveCurlCookieJar();
+            throw new \Exception('Authentication error : ' . $e->getMessage());
+
+        }
+    }
+
 }
