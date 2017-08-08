@@ -33,9 +33,19 @@ class ALMXMLMessage
 
             $xml = new \SimpleXMLElement('<'.$root.'/>');
 
-            array_walk_recursive($array, array ($xml, 'addChild'));
+            $this->ConstructConverter($array, $xml);
 
-            return $xml->asXML();
+            $lines = explode("\n", $xml->asXML());
+
+            $string = '';
+
+            for ($i = 0; $i < count($lines); $i++ ){
+
+                if($i !== 0) $string .= $lines[$i];
+
+            }
+
+            return $string;
 
         } catch (\Exception $e) {
 
@@ -45,27 +55,99 @@ class ALMXMLMessage
 
     }
 
+    public function ConstructConverter( $array, \SimpleXMLElement &$xml ) {
+
+        foreach( $array as $key => $value ) {
+
+            if(is_numeric($key)){
+
+                $key = 'item'.$key;
+
+            }
+
+            if( is_array($value) ) {
+
+                $node = $xml->addChild($key);
+
+                $this->ConstructConverter($value, $node);
+
+            } else {
+
+                $xml->addChild($key,$value);
+
+            }
+        }
+
+    }
+
     public function DeconstructMessage($xml = '')
     {
 
         try {
 
-            if(!$xml) return array();
-
-            $message = new \SimpleXMLElement($xml);
-
             $array = array();
 
-            foreach($message as $key => $val)
-            {
-                $array[$key] = $val;
+            if($xml !== '') {
+
+                $this->XMLParse(new \SimpleXMLIterator($xml), $array);
+
             }
 
             return $array;
 
         } catch (\Exception $e) {
 
-            throw new \Exception('ALMXMLMessage : ' . $e->getMessage());
+            throw new \Exception('ALMXMLMessage DeconstructMessage: ' . $e->getMessage());
+
+        }
+
+    }
+
+    public function XMLParse(\SimpleXMLIterator $sxi, &$array = array()) {
+
+        $counter = 0;
+        for($sxi->rewind(); $sxi->valid(); $sxi->next() ) {
+
+            /*if(!array_key_exists($sxi->key(),$array[$sxi->getName()])){
+
+                $array[$sxi->getName()][] = array($sxi->key() => array());
+
+            }*/
+
+            if(!array_key_exists($sxi->key(),$array)){
+
+                $array[$sxi->key()] = array();
+
+            }
+
+            $array[$sxi->key()][$counter] = array();
+
+            if($sxi->current()->attributes()){
+
+                $attr = array();
+                foreach($sxi->current()->attributes() as $key => $val){
+
+                    $attr[$key] = (string) $val;
+
+                }
+
+                $array[$sxi->key()][$counter]['@Attr'][] = $attr;
+
+            }
+
+            if((string)$sxi->current() !== ''){
+
+                $array[$sxi->key()][$counter]['@Value'] = (string)$sxi->current();
+
+            }
+
+            if($sxi->hasChildren()){
+
+                $this->XMLParse($sxi->getChildren(), $array[$sxi->key()][$counter]);
+
+            }
+
+            $counter++;
 
         }
 

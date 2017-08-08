@@ -40,49 +40,24 @@ class AlmAuthenticator
         return self::$Instance;
     }
 
-    public function Authenticate($host, $user, $password)
+    public function Authenticate($host, $user, $password, $domain = null, $project = null)
     {
 
-        \AlmClient\AlmRoutes::GetInstance($host);
-
-        $this->SetUser($user);
-
-        $this->SetPassword($password);
-
-        $this->Login();
-
-    }
-
-    public function Login()
-    {
         try {
 
-            $isValid = \AlmClient\AlmCurl::GetInstance()
-                ->AcceptXMLHeader()
-                ->SetPost(\AlmClient\ALMXMLMessage::GetInstance()->ConstructMessage('alm-authentication', array('user'=>$this->GetUser(),'password'=>$this->GetPassword())))
-                ->Execute(\AlmClient\AlmRoutes::GetInstance()->GetLoginUrl())
-                ->ValidResponse();
+            \AlmClient\AlmRoutes::GetInstance($host);
 
-            if (!$isValid) {
+            $this->SetUser($user);
 
-                \AlmClient\AlmCurlCookieJar::GetInstance()->RemoveCurlCookieJar();
+            $this->SetPassword($password);
 
-                throw new \Exception('Authentication error : Invalid response returned');
+            if($domain) \AlmClient\AlmRoutes::GetInstance()->SetDomain($domain);
 
-            } else {
+            if($project) \AlmClient\AlmRoutes::GetInstance()->SetProject($project);
 
-                //verify 'isAuthenticated'
-                $isValid = \AlmClient\AlmCurl::GetInstance()->AcceptXMLHeader()->Execute(\AlmClient\AlmRoutes::GetInstance()->GetAuthenticationCheckUrl())->ValidResponse();
+            $this->Login();
 
-                if (!$isValid) {
-
-                    throw new \Exception('Authentication error : Invalid response returned');
-
-                }
-
-            }
-
-            return $this;
+            $this->CreateSession();
 
         } catch (\Exception $e) {
 
@@ -93,17 +68,87 @@ class AlmAuthenticator
 
     }
 
+    public function Login()
+    {
+        try {
+
+            $isValid = \AlmClient\AlmCurl::GetInstance()
+                ->SetAcceptHeader()
+                ->BasicAuthHeader($this->GetUser(),$this->GetPassword())
+                ->SetPost(\AlmClient\ALMXMLMessage::GetInstance()->ConstructMessage('alm-authentication',array('user' => $this->GetUser(), 'password' => $this->GetPassword())))
+                ->Execute(\AlmClient\AlmRoutes::GetInstance()->GetLoginUrl())
+                ->ValidResponse();
+
+            if (!$isValid) {
+
+                \AlmClient\AlmCurlCookieJar::GetInstance()->RemoveCurlCookieJar();
+
+                throw new \Exception('Login error : Invalid response returned');
+
+            } else {
+
+                //verify authentication
+                $isValid = $this->IsAuthenticated();
+
+                if (!$isValid) {
+
+                    throw new \Exception('Login error : IsAuthenticated returned false');
+
+                }
+
+            }
+
+        } catch (\Exception $e) {
+
+            \AlmClient\AlmCurlCookieJar::GetInstance()->RemoveCurlCookieJar();
+            throw new \Exception('Login error : ' . $e->getMessage());
+
+        }
+
+    }
+
+    public function CreateSession()
+    {
+        try {
+
+            $isValid = \AlmClient\AlmCurl::GetInstance()
+                ->SetAcceptHeader()
+                ->SetPost(\AlmClient\ALMXMLMessage::GetInstance()->ConstructMessage('session-parameters',array('client-type' => 'REST Client')))
+                ->Execute(\AlmClient\AlmRoutes::GetInstance()->GetSiteSessionUrl())
+                ->ValidResponse();
+
+            if (!$isValid) {
+
+                \AlmClient\AlmCurlCookieJar::GetInstance()->RemoveCurlCookieJar();
+
+                throw new \Exception('Create Session error : Invalid response returned');
+
+            }
+
+        } catch (\Exception $e) {
+
+            \AlmClient\AlmCurlCookieJar::GetInstance()->RemoveCurlCookieJar();
+            throw new \Exception('Login error : ' . $e->getMessage());
+
+        }
+
+    }
+
     public function IsAuthenticated()
     {
         try {
 
-            \AlmClient\AlmCurl::GetInstance()->Execute(\AlmClient\AlmRoutes::GetInstance()->GetAuthenticationCheckUrl());
+            //verify 'isAuthenticated'
+            $isValid = \AlmClient\AlmCurl::GetInstance()
+                ->SetGetHeaders()
+                ->Execute(\AlmClient\AlmRoutes::GetInstance()->GetAuthenticationCheckUrl())
+                ->ValidResponse();
 
-            if (\AlmClient\AlmCurl::GetInstance()->ValidResponse()) {
-                return true;
-            }
+            if (!$isValid) {
 
-            return false;
+                return false;
+
+            } else return true;
 
         } catch (\Exception $e) {
 

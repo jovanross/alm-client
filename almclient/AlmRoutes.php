@@ -19,8 +19,6 @@ class AlmRoutes
 
     protected $project;
 
-    protected $appended = /*'?login-form-required=y'*/null;
-
     public static function GetInstance($host = null)
     {
         if (is_null(self::$Instance)) {
@@ -46,6 +44,26 @@ class AlmRoutes
 
     }
 
+    public function SetDomain($domain)
+    {
+        $this->domain = $domain;
+    }
+
+    public function GetDomain()
+    {
+        return $this->domain;
+    }
+
+    public function SetProject($project)
+    {
+        $this->project = $project;
+    }
+
+    public function GetProject()
+    {
+        return $this->project;
+    }
+
     private function GetHost()
     {
         if(empty($this->host)){
@@ -68,34 +86,49 @@ class AlmRoutes
 
     public function GetLoginUrl()
     {
-        return $this->GetHost() . '/qcbin/authentication-point/authenticate' . $this->appended;
+        return $this->GetHost() . '/qcbin/authentication-point/authenticate';
     }
 
     public function GetLogoutUrl()
     {
-        return $this->GetHost() . '/qcbin/authentication-point/logout' . $this->appended;
+        return $this->GetHost() . '/qcbin/authentication-point/logout';
     }
 
     public function GetAuthenticationCheckUrl()
     {
-        return $this->GetHost() . '/qcbin/rest/is-authenticated' . $this->appended;
+        return $this->GetHost() . '/qcbin/rest/is-authenticated';
     }
 
-    public function GetDomainsUrl($domain = null)
+    public function GetSiteSessionUrl()
     {
-        $url = $this->GetHost() . '/qcbin/rest/domains/' . $domain . $this->appended;
-        return $url;
+        return $this->GetHost() . '/qcbin/rest/site-session';
     }
 
-    public function GetProjectUrl($project = null)
+    public function GetDomainsUrl($domain = null, $includeProjects = false)
     {
-        $url = $this->GetHost() . '/qcbin/rest/domains/' . $this->domain . '/projects/' . $project . $this->appended;
-        return $url;
+        if($domain !== null) $domain = '/'.$domain;
+        if($includeProjects) $domain .= '?include-projects-info=y';
+
+        return $this->GetHost() . '/qcbin/rest/domains' . $domain;
+    }
+
+    public function GetDomainProjectsUrl($project = null)
+    {
+        if($project !== null) $project = '/'.$project;
+        return $this->GetHost() . '/qcbin/rest/domains/' . $this->GetDomain() . '/projects' . $project;
+    }
+
+    public function GetTestPlanFolders($id = null, $parentId = null)
+    {
+        if($id !== null) $id = '/'.$id;
+        if($parentId !== null) $parentId = '?query={parent-id['.$parentId.']}';
+
+        return $this->GetHost() . '/qcbin/rest/domains/' . $this->GetDomain() . '/projects/' . $this->GetProject(). '/test-folders' . $id . $parentId;
     }
 
     public function GetEntityUrl($entityType, $entityId = null)
     {
-        $url = $this->GetHost() . '/qcbin/rest/domains/' . $this->domain . '/projects/' . $this->project . '/' . $entityType . $this->appended;
+        $url = $this->GetHost() . '/qcbin/rest/domains/' . $this->GetDomain() . '/projects/' . $this->GetProject() . '/' . $entityType;
         if (null !== $entityId) {
             $url .= '/' . $entityId;
         }
@@ -104,7 +137,7 @@ class AlmRoutes
 
     public function GetEntityFieldsUrl($entityType, $onlyRequiredFields = true)
     {
-        $url = $this->GetHost() . '/qcbin/rest/domains/' . $this->domain . '/projects/' . $this->project . '/customization/entities/' . $entityType . '/fields' . $this->appended;
+        $url = $this->GetHost() . '/qcbin/rest/domains/' . $this->GetDomain() . '/projects/' . $this->GetProject() . '/customization/entities/' . $entityType . '/fields';
         if ($onlyRequiredFields) {
             $url .= '?required=true';
         }
@@ -113,7 +146,7 @@ class AlmRoutes
 
     public function GetListsUrl($listId = null)
     {
-        $url = $this->GetHost() . '/qcbin/rest/domains/' . $this->domain . '/projects/' . $this->project . '/customization/lists' . $this->appended;
+        $url = $this->GetHost() . '/qcbin/rest/domains/' . $this->GetDomain() . '/projects/' . $this->GetProject() . '/customization/lists';
         if (null !== $listId) {
             $url .= '?id=' . $listId;
         }
@@ -122,20 +155,17 @@ class AlmRoutes
 
     public function GetEntityCheckoutUrl($entityType, $entityId)
     {
-        $url = $this->GetHost() . '/qcbin/rest/domains/' . $this->domain . '/projects/' . $this->project . '/' . $entityType . '/' . $entityId . '/versions/check-out' . $this->appended;
-        return $url;
+        return $this->GetHost() . '/qcbin/rest/domains/' . $this->GetDomain() . '/projects/' . $this->GetProject() . '/' . $entityType . '/' . $entityId . '/versions/check-out';
     }
 
     public function GetEntityCheckinUrl($entityType, $entityId)
     {
-        $url = $this->GetHost() . '/qcbin/rest/domains/' . $this->domain . '/projects/' . $this->project . '/' . $entityType . '/' . $entityId . '/versions/check-in' . $this->appended;
-        return $url;
+        return $this->GetHost() . '/qcbin/rest/domains/' . $this->GetDomain() . '/projects/' . $this->GetProject() . '/' . $entityType . '/' . $entityId . '/versions/check-in';
     }
 
     public function GetEntityLockUrl($entityType, $entityId)
     {
-        $url = $this->GetHost() . '/qcbin/rest/domains/' . $this->domain . '/projects/' . $this->project . '/' . $entityType . '/' . $entityId . '/lock' . $this->appended;
-        return $url;
+        return $this->GetHost() . '/qcbin/rest/domains/' . $this->GetDomain() . '/projects/' . $this->GetProject() . '/' . $entityType . '/' . $entityId . '/lock';
     }
 
 }

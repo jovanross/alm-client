@@ -13,6 +13,26 @@ Class AlmClient
 
     private static $Instance;
 
+    public function SetDomain($domain)
+    {
+        \AlmClient\AlmRoutes::GetInstance()->SetDomain($domain);
+    }
+
+    public function GetDomain()
+    {
+        return \AlmClient\AlmRoutes::GetInstance()->GetDomain();
+    }
+
+    public function SetProject($project)
+    {
+        \AlmClient\AlmRoutes::GetInstance()->SetProject($project);
+    }
+
+    public function GetProject()
+    {
+        return \AlmClient\AlmRoutes::GetInstance()->GetProject();
+    }
+
     public static function GetInstance()
     {
         if (is_null(self::$Instance)) {
@@ -24,37 +44,40 @@ Class AlmClient
 
     public function __construct(){}
 
-    public function Connect($host, $username, $password)
+    public function Connect($host, $username, $password, $domain = null, $project = null)
     {
-        \AlmClient\AlmAuthenticator::GetInstance()->Authenticate($host, $username, $password);
+        \AlmClient\AlmAuthenticator::GetInstance()->Authenticate($host, $username, $password, $domain, $project);
 
     }
 
-    public function GetDomains()
+    public function GetDomains($domain = null)
     {
-        try {
+        return \AlmClient\AlmTestAssets::GetInstance()->GetDomains($domain);
 
-            $isValid = \AlmClient\AlmCurl::GetInstance()
-                ->AcceptXMLHeader()
-                ->Execute(\AlmClient\AlmRoutes::GetInstance()->GetDomainsUrl())
-                ->ValidResponse();
+    }
 
-            if (!$isValid) {
+    public function GetProjects($project = null)
+    {
+        return \AlmClient\AlmTestAssets::GetInstance()->GetProjects($project);
 
-                \AlmClient\AlmCurlCookieJar::GetInstance()->RemoveCurlCookieJar();
+    }
 
-                throw new \Exception('Authentication error : Invalid response returned');
+    public function GetTestPlanFolders($id = null, $parentId = null)
+    {
+        return \AlmClient\AlmTestAssets::GetInstance()->GetTestPlanFolders($id, $parentId);
 
-            }
+    }
 
-            return \AlmClient\AlmCurl::GetInstance()->GetResult();
+    public function Disconnect()
+    {
+        \AlmClient\AlmAuthenticator::GetInstance()->Logout();
 
-        } catch (\Exception $e) {
+    }
 
-            \AlmClient\AlmCurlCookieJar::GetInstance()->RemoveCurlCookieJar();
-            throw new \Exception('Authentication error : ' . $e->getMessage());
+    public function PersistSession()
+    {
+        \AlmClient\AlmCurlCookieJar::GetInstance()->StoreSession();
 
-        }
     }
 
 }

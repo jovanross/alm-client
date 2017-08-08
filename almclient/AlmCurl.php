@@ -41,6 +41,7 @@ Class AlmCurl
     private function Init()
     {
         if (null === $this->curl) {
+
             $this->curl = curl_init();
             curl_setopt($this->curl, CURLOPT_HEADER, 0);
             curl_setopt($this->curl, CURLOPT_HTTPGET, 1);
@@ -48,8 +49,9 @@ Class AlmCurl
             curl_setopt($this->curl, CURLOPT_CONNECTTIMEOUT, 10); //connection timeout
             curl_setopt($this->curl, CURLOPT_TIMEOUT, 30); //overall timeout
             curl_setopt($this->curl, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($this->curl, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($this->curl, CURLOPT_VERBOSE, false);
 
-            $this->Reset();
         }
 
         return $this;
@@ -81,22 +83,45 @@ Class AlmCurl
     {
         $this->Init();
 
-        curl_setopt($this->curl, CURLOPT_POST, 1);
+        $this->AddHeader("Content-Type: application/xml");
+        curl_setopt($this->curl, CURLOPT_POST, true);
         curl_setopt($this->curl, CURLOPT_POSTFIELDS, $body);
 
         return $this;
     }
 
-    public function SetBasicAuth($auth)
+    public function SetGetHeaders()
     {
-        curl_setopt($this->curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        $this->Init();
+
+        $this->SetAcceptHeader();
+        $this->SetContentTypeHeader();
+
+        return $this;
+    }
+
+    public function SetAcceptHeader()
+    {
+        $this->Init();
+        $this->AddHeader("Accept: application/xml");
+
+        return $this;
+    }
+
+    public function SetContentTypeHeader()
+    {
+        $this->Init();
+        $this->AddHeader("Content-Type: application/xml");
+
+        return $this;
     }
 
     public function SetPut($body = null)
     {
         $this->Init();
 
-        curl_setopt($this->curl, CURLOPT_CUSTOMREQUEST, "PUT");
+        $this->AddHeader("PUT /HTTP/1.1");
+        curl_setopt($this->curl, CURLOPT_PUT, true);
         curl_setopt($this->curl, CURLOPT_POSTFIELDS, $body);
 
         return $this;
@@ -115,15 +140,7 @@ Class AlmCurl
     public function BasicAuthHeader($user, $password)
     {
 
-        array_push($this->headers,"Authorization: Basic " . base64_encode($user . ":" . $password));
-
-        return $this;
-    }
-
-    public function AcceptXMLHeader()
-    {
-
-        array_push($this->headers,'Accept: application/xml');
+        $this->AddHeader("Authorization: Basic " . base64_encode($user . ":" . $password));
 
         return $this;
     }
@@ -133,8 +150,9 @@ Class AlmCurl
 
         $this->Init();
 
+        $this->Reset();
+
         curl_setopt($this->curl, CURLOPT_URL, $url);
-        curl_setopt($this->curl, CURLOPT_COOKIEFILE, \AlmClient\AlmCurlCookieJar::GetInstance()->GetCookieJar());
 
         if(count($this->headers)){
 
@@ -142,27 +160,37 @@ Class AlmCurl
 
         }
 
+        curl_setopt($this->curl, CURLOPT_COOKIEJAR, \AlmClient\AlmCurlCookieJar::GetInstance()->GetCookieJar());
+        curl_setopt($this->curl, CURLOPT_COOKIEFILE, \AlmClient\AlmCurlCookieJar::GetInstance()->GetCookieJar());
+
         $result = curl_exec($this->curl);
 
         if (curl_errno($this->curl) === 0) {
-            $this->result = $result;
-            $this->info = curl_getinfo($this->curl);
+
+            $this->SetResult($result);
+            $this->SetInfo(curl_getinfo($this->curl));
 
             if (!$this->ValidResponse()) {
 
                 if ($this->GetHttpCode() == '500') {
+
                     $error = $this->getInternalError();
                     throw new \Exception($error);
+
                 }
 
                 $httpCodeConstantName = get_class($this) . '::HTTP_' . $this->GetHttpCode();
+
                 if (defined($httpCodeConstantName)) {
+
                     throw new \Exception(constant($httpCodeConstantName));
+
                 }
 
                 throw new \Exception('Disallowed HTTP response code: ' . $this->GetHttpCode());
 
             }
+
         } else {
             throw new \Exception('Curl error: ' . curl_error($this->curl));
         }
@@ -182,9 +210,19 @@ Class AlmCurl
         return $xml->Title[0];
     }
 
+    protected function SetResult($result)
+    {
+        $this->result = $result;
+    }
+
     public function GetResult()
     {
         return $this->result;
+    }
+
+    protected function SetInfo($info)
+    {
+        $this->info = $info;
     }
 
     public function GetInfo()
@@ -225,8 +263,9 @@ Class AlmCurl
 
     protected function Reset()
     {
-        $this->result = null;
-        $this->info = null;
+
+        $this->SetResult(null);
+        $this->SetInfo(null);
 
         return $this;
     }
