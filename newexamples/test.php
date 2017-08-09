@@ -8,10 +8,20 @@
 
 require_once '../vendor/autoload.php';
 
-
 $client = new AlmClient\AlmClient();
 
-$client->Connect('https://alm.cscinfo.com','user','password');
+$client->Connect('https://alm.cscinfo.com','jross0','!gr8cqTy1@');
 
 $res = $client->GetDomains();
 
+$client->SetDomain('ETP');
+
+$res = $client->GetProjects();
+
+$client->SetProject('ETP');
+
+$res = $client->GetTestPlanFolders(null, 2);
+
+//\AlmClient\AlmClient::GetInstance()->PersistSession();
+
+echo 'Done';
