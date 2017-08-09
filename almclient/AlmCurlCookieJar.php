@@ -78,6 +78,8 @@ class AlmCurlCookieJar
 
                 @fclose($this->GetPointer());
 
+                @unlink($this->GetCookieJar());
+
                 $this->SetPointer(null);
                 $this->SetCookieJar(null);
 
