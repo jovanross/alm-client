@@ -108,42 +108,39 @@ class ALMXMLMessage
         $counter = 0;
         for($sxi->rewind(); $sxi->valid(); $sxi->next() ) {
 
-            /*if(!array_key_exists($sxi->key(),$array[$sxi->getName()])){
+            //root element
+            if(!array_key_exists($sxi->getName(),$array)){
 
-                $array[$sxi->getName()][] = array($sxi->key() => array());
-
-            }*/
-
-            if(!array_key_exists($sxi->key(),$array)){
-
-                $array[$sxi->key()] = array();
+                $array[$sxi->getName()] = array();
 
             }
 
-            $array[$sxi->key()][$counter] = array();
+            //child element
+            $array[$sxi->getName()][$counter][$sxi->key()] = array();
 
+            //child element attributes
             if($sxi->current()->attributes()){
 
-                $attr = array();
+                //$attr = array();
                 foreach($sxi->current()->attributes() as $key => $val){
 
-                    $attr[$key] = (string) $val;
+                    $array[$sxi->getName()][$counter][$sxi->key()]['@'.$key] = (string) $val;
 
                 }
 
-                $array[$sxi->key()][$counter]['@Attr'][] = $attr;
-
             }
 
+            //child element value
             if((string)$sxi->current() !== ''){
 
-                $array[$sxi->key()][$counter]['@Value'] = (string)$sxi->current();
+                $array[$sxi->getName()][$counter][$sxi->key()] = (string)$sxi->current();
 
             }
 
+            //child has nested elements
             if($sxi->hasChildren()){
 
-                $this->XMLParse($sxi->getChildren(), $array[$sxi->key()][$counter]);
+                $this->XMLParse($sxi->getChildren(), $array[$sxi->getName()][$counter]);
 
             }
 
