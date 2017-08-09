@@ -45,6 +45,10 @@ class AlmAuthenticator
 
         try {
 
+            if(strpos($host,'http://') === false && strpos($host,'https://') === false){
+                $host = 'https://' . $host;
+            }
+
             \AlmClient\AlmRoutes::GetInstance($host);
 
             $this->SetUser($user);
