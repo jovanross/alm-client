@@ -10,7 +10,7 @@ require_once '../vendor/autoload.php';
 
 $client = new AlmClient\AlmClient();
 
-$client->Connect('https://alm.cscinfo.com','jross0','!gr8cqTy1@');
+$client->Connect('https://alm-server-name','username','password');
 
 $res = $client->GetDomains();
 
