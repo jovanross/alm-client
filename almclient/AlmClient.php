@@ -47,37 +47,36 @@ Class AlmClient
     public function Connect($host, $username, $password, $domain = null, $project = null)
     {
         \AlmClient\AlmAuthenticator::GetInstance()->Authenticate($host, $username, $password, $domain, $project);
-
     }
 
     public function GetDomains($domain = null)
     {
         return \AlmClient\AlmTestAssets::GetInstance()->GetDomains($domain);
-
     }
 
     public function GetProjects($project = null)
     {
         return \AlmClient\AlmTestAssets::GetInstance()->GetProjects($project);
-
     }
 
     public function GetTestPlanFolders($id = null, $parentId = null)
     {
         return \AlmClient\AlmTestAssets::GetInstance()->GetTestPlanFolders($id, $parentId);
+    }
 
+    public function CreateTest()
+    {
+        return \AlmClient\AlmTestAssets::GetInstance()->CreateTest();
     }
 
     public function Disconnect()
     {
         \AlmClient\AlmAuthenticator::GetInstance()->Logout();
-
     }
 
     public function PersistSession()
     {
         \AlmClient\AlmCurlCookieJar::GetInstance()->StoreSession();
-
     }
 
 }

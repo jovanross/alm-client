@@ -133,4 +133,33 @@ class AlmTestAssets
         }
     }
 
+    public function CreateTest()
+    {
+        try {
+
+            $this->VerifyState();
+
+            $isValid = \AlmClient\AlmCurl::GetInstance()
+                ->SetGetHeaders()
+                ->Execute(\AlmClient\AlmRoutes::GetInstance()->GetEntityUrl('tests'))
+                ->ValidResponse();
+
+            if (!$isValid) {
+
+                \AlmClient\AlmCurlCookieJar::GetInstance()->RemoveCurlCookieJar();
+
+                throw new \Exception('CreateTest error : Invalid response returned');
+
+            }
+
+            return \AlmClient\ALMXMLMessage::GetInstance()->DeconstructMessage(\AlmClient\AlmCurl::GetInstance()->GetResult());
+
+        } catch (\Exception $e) {
+
+            \AlmClient\AlmCurlCookieJar::GetInstance()->RemoveCurlCookieJar();
+            throw new \Exception('CreateTest error : ' . $e->getMessage());
+
+        }
+    }
+
 }

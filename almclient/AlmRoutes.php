@@ -135,7 +135,7 @@ class AlmRoutes
         return $url;
     }
 
-    public function GetEntityFieldsUrl($entityType, $onlyRequiredFields = true)
+    public function GetEntityFieldsUrl($entityType, $onlyRequiredFields = false)
     {
         $url = $this->GetHost() . '/qcbin/rest/domains/' . $this->GetDomain() . '/projects/' . $this->GetProject() . '/customization/entities/' . $entityType . '/fields';
         if ($onlyRequiredFields) {
