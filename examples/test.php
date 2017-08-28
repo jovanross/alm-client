@@ -10,7 +10,7 @@ require_once '../vendor/autoload.php';
 
 $client = new AlmClient\AlmClient();
 
-$client->Connect('alm.cscinfo.com','jross0','!gr8cqTy1@');
+$client->Connect('alm.cscinfo.com','','');
 
 $res = $client->GetDomains();
 
